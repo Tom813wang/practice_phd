@@ -105,22 +105,16 @@ class Training:
                 raise ValueError("checkpoint must be a boolean or an integer")
                    
 
-    def train_loop(self, train_loader):
+    def train_loop(self, 
+                   train_loader : DataLoader, 
+                   teacher_forcing : bool = False):
         self.model.train()
         total_loss = 0
 
-        for data, target in train_loader:
-            data, target = data.to(self.device), target.to(self.device)
+        for seq_input, seq_output in train_loader:
+            seq_input, seq_output = seq_input.to(self.device), seq_output.to(self.device)
             self.optimizer.zero_grad()
-            output = self.model(data)
-            loss = self.loss_function(output, target)
-            loss.backward()
-            if self.clip:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip)
-            self.optimizer.step()
-            self.lr_scheduler.step()
-
-            total_loss += loss.item()
+            output = self.model(seq_input, seq_output)
 
         return total_loss / len(train_loader)
     
